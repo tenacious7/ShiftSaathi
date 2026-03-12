@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import BottomNav from '../components/BottomNav';
-import { ShoppingBag, Tag, MapPin, Search, Filter, Plus, Heart, Loader2 } from 'lucide-react';
+import { ShoppingBag, Tag, MapPin, Search, Filter, Plus, Heart } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import Loader from '../components/Loader';
 
 interface Item {
   id: string; // Changed to string since it's a UUID in DB
@@ -172,9 +173,8 @@ export default function Marketplace() {
 
       {/* Items Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-brand-purple animate-spin mb-4" />
-          <p className="text-gray-500 font-medium">Loading items near you...</p>
+        <div className="p-6">
+          <Loader text="Finding items near you..." />
         </div>
       ) : (
         <div className="p-4 grid grid-cols-2 gap-4">

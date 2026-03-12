@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import Notifications from '../components/Notifications';
+import Loader from '../components/Loader';
 import { motion } from 'framer-motion';
 import { supabase } from '../supabaseClient';
 
@@ -28,26 +29,22 @@ export default function Dashboard() {
 
         const userId = session.user.id;
         
-        // Call the backend API
-        const response = await fetch(`/api/profile/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        });
+        // Fetch profile from Supabase
+        const { data: profileData, error: profileError } = await supabase
+          .from('user_details')
+          .select('name')
+          .eq('id', userId)
+          .single();
 
-        if (!response.ok) {
-          console.warn('Backend profile fetch failed, falling back to session metadata');
-          setProfile({
-            id: userId,
-            full_name: session.user.user_metadata?.full_name || 'User'
-          });
+        if (profileError || !profileData) {
+          console.warn('Profile fetch failed, redirecting to onboarding', profileError);
+          navigate('/onboarding/profile');
           return;
         }
 
-        const data = await response.json();
         setProfile({
-          id: data.user?.id || userId,
-          full_name: data.user?.full_name || session.user.user_metadata?.full_name || 'User'
+          id: userId,
+          full_name: profileData.name || session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User'
         });
       } catch (error) {
         console.error('Error:', error);
@@ -56,7 +53,7 @@ export default function Dashboard() {
         if (session) {
           setProfile({
             id: session.user.id,
-            full_name: session.user.user_metadata?.full_name || 'User'
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User'
           });
         }
       } finally {
@@ -130,8 +127,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-light flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-purple"></div>
+      <div className="min-h-screen bg-bg-light flex items-center justify-center p-6">
+        <Loader text="Loading your dashboard..." />
       </div>
     );
   }
@@ -147,7 +144,7 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-6 relative z-10">
           <div>
             <p className="text-white/80 text-sm font-medium">Welcome back,</p>
-            <h1 className="text-2xl font-bold">{profile?.full_name || 'User'}</h1>
+            <h1 className="text-2xl font-bold text-white">{profile?.full_name || 'User'}</h1>
           </div>
           <div className="flex items-center gap-3">
             <button 
@@ -156,13 +153,6 @@ export default function Dashboard() {
             >
               <span className="material-symbols-rounded text-brand-lime">notifications</span>
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-brand-dark"></span>
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center backdrop-blur-sm border border-red-500/30 shadow-inner hover:bg-red-500/40 transition-colors text-red-200"
-              title="Logout"
-            >
-              <span className="material-symbols-rounded">logout</span>
             </button>
           </div>
         </div>

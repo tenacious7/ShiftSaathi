@@ -7,20 +7,20 @@ import { createServer as createViteServer } from 'vite';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(cors());
 app.use(express.json());
 
 // Initialize Supabase Admin Client
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '')?.replace(/^["']|["']$/g, '');
+const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '')?.replace(/^["']|["']$/g, '');
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn('Missing Supabase Admin credentials in environment variables.');
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseServiceKey || 'placeholder-key');
 
 // GET Profile Route
 app.get('/api/profile/:userId', async (req, res) => {
@@ -95,6 +95,54 @@ app.get('/api/marketplace/:location', async (req, res) => {
     res.json({ items: data });
   } catch (error: any) {
     console.error('Error fetching marketplace items:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/community/new
+app.post('/api/community/new', async (req, res) => {
+  const { user_id, content, type, tags } = req.body;
+
+  if (!user_id || !content) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('community_posts')
+      .insert([{ user_id, content, type: type || 'text', tags: tags || [] }])
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(201).json({ message: 'Post created successfully', post: data[0] });
+  } catch (error: any) {
+    console.error('Error creating community post:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/community
+app.get('/api/community', async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('community_posts')
+      .select(`
+        *,
+        users:user_id (full_name, avatar_url)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({ posts: data });
+  } catch (error: any) {
+    console.error('Error fetching community posts:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

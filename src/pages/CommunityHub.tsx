@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import BottomNav from '../components/BottomNav';
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { Plus, Search, MapPin, Users, Calendar, X, ShieldCheck, Star, MoreHorizontal, Flag, Bell } from 'lucide-react';

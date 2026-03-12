@@ -3,9 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Check, ChevronDown, AlertCircle, FileText, ShieldCheck } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 // Types
 interface FormData {
+  role: 'user' | 'roommate' | 'business' | '';
   name: string;
   email: string;
   phone: string;
@@ -28,6 +30,7 @@ interface FormData {
 }
 
 const INITIAL_DATA: FormData = {
+  role: '',
   name: '',
   email: '',
   phone: '',
@@ -77,7 +80,7 @@ export default function ProfileSetup() {
   const [showSkipWarning, setShowSkipWarning] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
-  const TOTAL_STEPS = 7;
+  const TOTAL_STEPS = 8;
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -110,6 +113,10 @@ export default function ProfileSetup() {
       setStep(step + 1);
       window.scrollTo(0, 0);
     } else {
+      if (!formData.termsAccepted) {
+        setErrors(prev => ({ ...prev, termsAccepted: 'You must accept the Terms & Conditions to continue' }));
+        return;
+      }
       handleComplete();
     }
   };
@@ -123,23 +130,83 @@ export default function ProfileSetup() {
       setStep(step - 1);
       window.scrollTo(0, 0);
     } else {
-      navigate('/onboarding/user-type');
+      navigate(-1);
     }
   };
 
   const handleSkip = () => {
-    if (step === 6) { // Only skip Bio step
+    if (step === 7) { // Only skip Bio step
       setStep(step + 1);
       window.scrollTo(0, 0);
     }
   };
 
-  const handleComplete = () => {
-    setIsSuccess(true);
-    triggerConfetti();
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 3500);
+  const handleComplete = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Upload photo if exists
+        let photoUrl = null;
+        if (formData.photo) {
+          const fileExt = formData.photo.name.split('.').pop();
+          const fileName = `${session.user.id}-${Math.random()}.${fileExt}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, formData.photo);
+            
+          if (!uploadError && uploadData) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(fileName);
+            photoUrl = publicUrl;
+          }
+        }
+
+        // Save to user_details
+        const { error } = await supabase
+          .from('user_details')
+          .upsert({
+            id: session.user.id,
+            role: formData.role,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            age: formData.age ? parseInt(formData.age) : null,
+            gender: formData.gender,
+            occupation: formData.occupation,
+            organization: formData.organization,
+            study_year: formData.studyYear,
+            degree: formData.degree,
+            job_title: formData.jobTitle,
+            origin_state: formData.originState,
+            mother_tongue: formData.motherTongue,
+            destination_city: formData.destinationCity,
+            budget: formData.budget ? parseInt(formData.budget) : null,
+            move_in_date: formData.moveInDate || null,
+            habits: formData.habits,
+            bio: formData.bio,
+            photo_url: photoUrl,
+            terms_accepted: formData.termsAccepted,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) {
+          console.error('Error saving profile:', error);
+          setErrors(prev => ({ ...prev, termsAccepted: 'Failed to save profile. Please try again.' }));
+          return;
+        }
+      }
+      
+      setIsSuccess(true);
+      triggerConfetti();
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 3500);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setErrors(prev => ({ ...prev, termsAccepted: 'An unexpected error occurred.' }));
+    }
   };
 
   const triggerConfetti = () => {
@@ -347,6 +414,52 @@ export default function ProfileSetup() {
                 className="space-y-6"
               >
                 <div className="mb-8">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">What brings you here?</h1>
+                  <p className="text-gray-500">Select your primary goal so we can tailor your experience.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    { id: 'user', title: 'Find a Place', desc: 'Looking for a PG, mess, or tiffin service', icon: 'home' },
+                    { id: 'roommate', title: 'Find a Roommate', desc: 'Looking for someone to share a place with', icon: 'group' },
+                    { id: 'business', title: 'List Your Service', desc: 'I am a PG owner or mess provider', icon: 'store' }
+                  ].map((role) => (
+                    <button
+                      key={role.id}
+                      onClick={() => handleChange({ target: { name: 'role', value: role.id } } as any)}
+                      className={`w-full flex items-start p-5 rounded-2xl border-2 transition-all text-left ${
+                        formData.role === role.id
+                          ? 'border-brand-purple bg-brand-purple/5 shadow-md'
+                          : 'border-gray-100 bg-white hover:border-brand-purple/30 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 shrink-0 ${
+                        formData.role === role.id ? 'bg-brand-purple text-white' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        <span className="material-symbols-rounded">{role.icon}</span>
+                      </div>
+                      <div>
+                        <h3 className={`font-bold text-lg mb-1 ${formData.role === role.id ? 'text-brand-purple' : 'text-gray-900'}`}>
+                          {role.title}
+                        </h3>
+                        <p className="text-gray-500 text-sm leading-relaxed">{role.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {errors.role && <p className="text-red-500 text-sm mt-2">{errors.role}</p>}
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div className="mb-8">
                   <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Basic Details</h1>
                   <p className="text-gray-500">Let's get your profile started with some essential information.</p>
                 </div>
@@ -362,9 +475,9 @@ export default function ProfileSetup() {
               </motion.div>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <motion.div
-                key="step2"
+                key="step3"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -442,9 +555,9 @@ export default function ProfileSetup() {
               </motion.div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <motion.div
-                key="step3"
+                key="step4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -477,9 +590,9 @@ export default function ProfileSetup() {
               </motion.div>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <motion.div
-                key="step4"
+                key="step5"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -514,9 +627,9 @@ export default function ProfileSetup() {
               </motion.div>
             )}
 
-            {step === 5 && (
+            {step === 6 && (
               <motion.div
-                key="step5"
+                key="step6"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -551,9 +664,9 @@ export default function ProfileSetup() {
               </motion.div>
             )}
 
-            {step === 6 && (
+            {step === 7 && (
               <motion.div
-                key="step6"
+                key="step7"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -603,9 +716,9 @@ export default function ProfileSetup() {
               </motion.div>
             )}
 
-            {step === 7 && (
+            {step === 8 && (
               <motion.div
-                key="step7"
+                key="step8"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -699,7 +812,7 @@ export default function ProfileSetup() {
                     </div>
                   </div>
                   <div className="text-sm text-gray-600">
-                    I agree to the <span className="text-brand-purple font-semibold hover:underline">Terms of Service</span> and <span className="text-brand-purple font-semibold hover:underline">Privacy Policy</span>.
+                    I <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-brand-purple font-semibold hover:underline">Accept Terms & Conditions</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-brand-purple font-semibold hover:underline">Privacy Policy</a>.
                   </div>
                 </label>
                 {errors.termsAccepted && (

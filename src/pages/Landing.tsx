@@ -55,7 +55,7 @@ export default function Landing() {
   }, []);
 
   const handleGetStarted = () => {
-    navigate('/auth/login');
+    navigate('/auth/register');
   };
 
   return (
