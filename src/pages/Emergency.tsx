@@ -18,7 +18,7 @@ export default function Emergency() {
   return (
     <div className="min-h-screen bg-bg-light pb-24">
       {/* Header */}
-      <div className="bg-white p-6 shadow-sm sticky top-0 z-10">
+      <div className="bg-white p-6 shadow-sm sticky top-0 z-40">
         <div className="flex items-center justify-between mb-4">
           <Link to="/dashboard" className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
             <span className="material-symbols-rounded text-gray-600">arrow_back</span>

@@ -35,7 +35,7 @@ export default function Wishlist() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24 font-sans">
       {/* Header */}
-      <div className="bg-white p-6 sticky top-0 z-10 shadow-sm flex items-center gap-4">
+      <div className="bg-white p-6 sticky top-0 z-40 shadow-sm flex items-center gap-4">
         <button onClick={() => navigate('/marketplace')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
           <span className="material-symbols-rounded text-gray-600">arrow_back</span>
         </button>

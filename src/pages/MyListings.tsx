@@ -63,7 +63,7 @@ export default function MyListings() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-24">
       {/* Header */}
-      <div className="bg-white px-4 py-4 sticky top-0 z-30 border-b border-gray-100 flex items-center gap-3 shadow-sm">
+      <div className="bg-white px-4 py-4 sticky top-0 z-40 border-b border-gray-100 flex items-center gap-3 shadow-sm">
         <button 
           onClick={() => navigate(-1)} 
           className="p-2 rounded-full hover:bg-gray-100 transition-colors active:scale-95"

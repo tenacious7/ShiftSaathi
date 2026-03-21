@@ -28,6 +28,11 @@ export default function CommunityHub() {
   const { scrollY } = useScroll();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const toggleExpand = (id: number) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() || 0;
@@ -273,27 +278,60 @@ export default function CommunityHub() {
             Recommended for you
             <span className="bg-brand-lime text-brand-dark text-[10px] px-2 py-0.5 rounded-full">Based on your interests</span>
           </h2>
-          <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide items-start">
             {recommendedActivities.map((activity) => (
               <motion.div
                 key={activity.id}
+                layout
                 whileTap={{ scale: 0.98 }}
-                className="min-w-[280px] bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col"
+                className={`bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col transition-shadow hover:shadow-md shrink-0 ${expandedId === activity.id ? 'w-[320px]' : 'w-[280px]'}`}
               >
-                <div className="relative h-32 rounded-xl overflow-hidden mb-3">
-                  <img src={activity.image} alt={activity.name} className="w-full h-full object-cover" />
-                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold shadow-sm">
-                    {activity.price}
-                  </div>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-1">{activity.name}</h3>
-                <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
-                  <MapPin size={12} />
-                  {activity.location}
+                <div className="cursor-pointer" onClick={() => toggleExpand(activity.id)}>
+                  <motion.div layout className="relative h-32 rounded-xl overflow-hidden mb-3">
+                    <img src={activity.image} alt={activity.name} className="w-full h-full object-cover" />
+                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold shadow-sm">
+                      {activity.price}
+                    </div>
+                  </motion.div>
+                  <motion.h3 layout className="font-bold text-gray-900 mb-1">{activity.name}</motion.h3>
+                  <motion.div layout className="flex items-center gap-1 text-xs text-gray-500 mb-3">
+                    <MapPin size={12} />
+                    {activity.location}
+                  </motion.div>
                 </div>
                 
+                <AnimatePresence>
+                  {expandedId === activity.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="text-sm text-gray-600 mb-4 mt-2">{activity.description || 'Join our vibrant community! We meet regularly to share experiences, learn together, and build lasting connections. Everyone is welcome to join and participate.'}</p>
+                      
+                      <div className="bg-gray-50 p-3 rounded-xl mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold text-gray-900">Host Rating & Reviews</span>
+                          <div className="flex items-center gap-1 text-sm font-bold text-yellow-600">
+                            <Star size={14} className="fill-yellow-600" />
+                            {activity.host.rating}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 italic">"Amazing host! Very well organized and welcoming community. Highly recommended for newcomers." - Verified Member</p>
+                      </div>
+
+                      <div className="flex gap-3 mb-4">
+                        <button className="flex-1 bg-brand-dark text-white py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-brand-dark/10 hover:bg-gray-900 transition-colors">
+                          {activity.price === 'Free' ? 'Join Group' : 'Book Spot'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* Host Info Mini */}
-                <div className="flex items-center gap-2 mt-auto pt-3 border-t border-gray-50">
+                <motion.div layout className="flex items-center gap-2 mt-auto pt-3 border-t border-gray-50">
                    <img src={activity.host.avatar} alt={activity.host.name} className="w-6 h-6 rounded-full" />
                    <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-gray-900 truncate flex items-center gap-1">
@@ -305,7 +343,7 @@ export default function CommunityHub() {
                      <Star size={8} className="text-yellow-600 fill-yellow-600" />
                      {activity.host.rating}
                    </div>
-                </div>
+                </motion.div>
               </motion.div>
             ))}
           </div>
@@ -317,12 +355,13 @@ export default function CommunityHub() {
           {activities.map((activity) => (
             <motion.div
               key={activity.id}
+              layout
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden"
             >
               {/* Host Header */}
-              <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-50">
+              <motion.div layout className="flex items-center justify-between mb-3 pb-3 border-b border-gray-50">
                 <div className="flex items-center gap-2">
                   <img src={activity.host.avatar} alt={activity.host.name} className="w-8 h-8 rounded-full border border-gray-100" />
                   <div>
@@ -345,9 +384,9 @@ export default function CommunityHub() {
                 <button className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-50">
                   <MoreHorizontal size={20} />
                 </button>
-              </div>
+              </motion.div>
 
-              <div className="flex gap-4">
+              <motion.div layout className="flex gap-4 cursor-pointer" onClick={() => toggleExpand(activity.id)}>
                 <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0">
                   <img src={activity.image} alt={activity.name} className="w-full h-full object-cover" />
                 </div>
@@ -378,16 +417,41 @@ export default function CommunityHub() {
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
               
-              <div className="flex gap-3 mt-4">
+              <AnimatePresence>
+                {expandedId === activity.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4 pt-4 border-t border-gray-50 overflow-hidden"
+                  >
+                    <h4 className="font-bold text-gray-900 mb-2">About this community</h4>
+                    <p className="text-sm text-gray-600 mb-4">{activity.description || 'Join our vibrant community! We meet regularly to share experiences, learn together, and build lasting connections. Everyone is welcome to join and participate.'}</p>
+                    
+                    <div className="bg-gray-50 p-3 rounded-xl mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-bold text-gray-900">Host Rating & Reviews</span>
+                        <div className="flex items-center gap-1 text-sm font-bold text-yellow-600">
+                          <Star size={14} className="fill-yellow-600" />
+                          {activity.host.rating}
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 italic">"Amazing host! Very well organized and welcoming community. Highly recommended for newcomers." - Verified Member</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <motion.div layout className="flex gap-3 mt-4">
                 <button className="flex-1 bg-brand-dark text-white py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-brand-dark/10 hover:bg-gray-900 transition-colors">
                   {activity.price === 'Free' ? 'Join Group' : 'Book Spot'}
                 </button>
                 <button className="p-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-colors" title="Report Activity">
                   <Flag size={18} />
                 </button>
-              </div>
+              </motion.div>
             </motion.div>
           ))}
         </section>

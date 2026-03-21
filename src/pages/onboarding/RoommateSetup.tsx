@@ -149,7 +149,7 @@ export default function RoommateSetup() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       {/* Header */}
-      <div className="bg-white px-6 py-4 sticky top-0 z-10 border-b border-gray-100 flex items-center justify-between">
+      <div className="bg-white px-6 py-4 sticky top-0 z-40 border-b border-gray-100 flex items-center justify-between">
         <button onClick={handleBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
           <span className="material-symbols-rounded text-gray-600">arrow_back</span>
         </button>

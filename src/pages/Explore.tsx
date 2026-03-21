@@ -71,7 +71,7 @@ export default function Explore() {
   return (
     <div className="min-h-screen bg-bg-light pb-24 font-sans">
       {/* Header & Search */}
-      <div className="bg-white px-4 pt-6 pb-4 sticky top-0 z-30 border-b border-gray-100 shadow-sm">
+      <div className="bg-white px-4 pt-6 pb-4 sticky top-0 z-40 border-b border-gray-100 shadow-sm">
         <h1 className="text-2xl font-extrabold text-brand-dark mb-4">Explore</h1>
         
         <div className="flex gap-3">

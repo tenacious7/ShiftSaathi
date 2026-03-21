@@ -111,7 +111,7 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24 font-sans">
       {/* Header */}
-      <div className="bg-white p-6 sticky top-0 z-10 shadow-sm">
+      <div className="bg-white p-6 sticky top-0 z-40 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

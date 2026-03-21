@@ -169,7 +169,7 @@ export default function ProfileSetup() {
           .upsert({
             id: session.user.id,
             role: formData.role,
-            name: formData.name,
+            full_name: formData.name,
             email: formData.email,
             phone: formData.phone,
             age: formData.age ? parseInt(formData.age) : null,
@@ -379,8 +379,8 @@ export default function ProfileSetup() {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="bg-white px-6 pt-6 pb-4 sticky top-0 z-10 border-b border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 sticky top-0 z-40 border-b border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <button onClick={handleBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors group">
             <span className="material-symbols-rounded text-gray-600 group-hover:text-brand-dark transition-colors">arrow_back</span>
           </button>
@@ -403,7 +403,7 @@ export default function ProfileSetup() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto scroll-smooth">
-        <div className="max-w-lg mx-auto p-6 pb-32">
+        <div className="max-w-lg mx-auto p-4 sm:p-6 pb-28 sm:pb-32">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div
@@ -420,30 +420,37 @@ export default function ProfileSetup() {
 
                 <div className="space-y-4">
                   {[
-                    { id: 'user', title: 'Find a Place', desc: 'Looking for a PG, mess, or tiffin service', icon: 'home' },
-                    { id: 'roommate', title: 'Find a Roommate', desc: 'Looking for someone to share a place with', icon: 'group' },
-                    { id: 'business', title: 'List Your Service', desc: 'I am a PG owner or mess provider', icon: 'store' }
+                    { id: 'user', title: 'Find a Place', desc: 'Looking for a PG, mess, or tiffin service', icon: 'search', color: 'bg-brand-blue-accent', textColor: 'text-white' },
+                    { id: 'roommate', title: 'Find a Roommate', desc: 'Looking for someone to share a place with', icon: 'group_add', color: 'bg-brand-purple', textColor: 'text-white' },
+                    { id: 'business', title: 'List Your Service', desc: 'I am a PG owner or mess provider', icon: 'storefront', color: 'bg-brand-lime', textColor: 'text-brand-dark' }
                   ].map((role) => (
                     <button
                       key={role.id}
                       onClick={() => handleChange({ target: { name: 'role', value: role.id } } as any)}
-                      className={`w-full flex items-start p-5 rounded-2xl border-2 transition-all text-left ${
+                      className={`w-full flex items-center p-6 rounded-2xl shadow-sm border transition-all text-left group ${
                         formData.role === role.id
                           ? 'border-brand-purple bg-brand-purple/5 shadow-md'
-                          : 'border-gray-100 bg-white hover:border-brand-purple/30 hover:bg-gray-50'
+                          : 'border-gray-100 bg-white hover:shadow-md'
                       }`}
                     >
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 shrink-0 ${
-                        formData.role === role.id ? 'bg-brand-purple text-white' : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <div className={`w-12 h-12 rounded-full ${role.color} flex items-center justify-center ${role.textColor} shrink-0 mr-4`}>
                         <span className="material-symbols-rounded">{role.icon}</span>
                       </div>
                       <div>
-                        <h3 className={`font-bold text-lg mb-1 ${formData.role === role.id ? 'text-brand-purple' : 'text-gray-900'}`}>
+                        <h3 className={`font-semibold text-lg transition-colors ${formData.role === role.id ? 'text-brand-purple' : 'text-brand-dark group-hover:text-brand-purple'}`}>
                           {role.title}
                         </h3>
-                        <p className="text-gray-500 text-sm leading-relaxed">{role.desc}</p>
+                        <p className="text-sm text-gray-500">{role.desc}</p>
                       </div>
+                      {formData.role === role.id ? (
+                        <span className="material-symbols-rounded ml-auto text-brand-purple">
+                          check_circle
+                        </span>
+                      ) : (
+                        <span className="material-symbols-rounded ml-auto text-gray-400 group-hover:text-brand-purple transition-colors">
+                          chevron_right
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -825,21 +832,21 @@ export default function ProfileSetup() {
       </div>
 
       {/* Footer */}
-      <div className="bg-white p-6 border-t border-gray-100 fixed bottom-0 left-0 right-0 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <div className="max-w-md mx-auto flex gap-4">
+      <div className="bg-white/80 backdrop-blur-xl p-4 sm:p-6 border-t border-white/50 fixed bottom-0 left-0 right-0 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+        <div className="max-w-md mx-auto flex gap-3">
           <button
             onClick={handleBack}
-            className="flex-1 bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-200 transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-14 h-14 shrink-0 bg-brand-purple/10 text-brand-purple rounded-2xl font-semibold hover:bg-brand-purple/20 transition-colors active:scale-[0.98] flex items-center justify-center"
+            aria-label="Go Back"
           >
-             <span className="material-symbols-rounded">arrow_back</span>
-             Back
+             <span className="material-symbols-rounded text-2xl">arrow_back</span>
           </button>
           <button
             onClick={() => handleNext(false)}
-            className={`flex-[2] bg-brand-dark text-white py-4 rounded-xl font-semibold text-lg shadow-xl shadow-brand-dark/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
+            className="flex-1 bg-brand-purple text-white h-14 rounded-2xl font-semibold text-lg shadow-lg shadow-brand-purple/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 hover:bg-brand-purple/90"
           >
             {step === TOTAL_STEPS ? 'Complete Registration' : 'Continue'}
-            <span className="material-symbols-rounded">arrow_forward</span>
+            <span className="material-symbols-rounded text-xl">arrow_forward</span>
           </button>
         </div>
       </div>

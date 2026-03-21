@@ -32,19 +32,22 @@ export default function Dashboard() {
         // Fetch profile from Supabase
         const { data: profileData, error: profileError } = await supabase
           .from('user_details')
-          .select('name')
+          .select('full_name')
           .eq('id', userId)
           .single();
 
         if (profileError || !profileData) {
-          console.warn('Profile fetch failed, redirecting to onboarding', profileError);
-          navigate('/onboarding/profile');
+          console.warn('Profile fetch failed, using fallback data', profileError);
+          setProfile({
+            id: userId,
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User'
+          });
           return;
         }
 
         setProfile({
           id: userId,
-          full_name: profileData.name || session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User'
+          full_name: profileData.full_name || session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User'
         });
       } catch (error) {
         console.error('Error:', error);
@@ -138,7 +141,7 @@ export default function Dashboard() {
       <Notifications isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
       
       {/* Header */}
-      <header className="bg-brand-dark text-white p-6 rounded-b-3xl shadow-lg relative overflow-hidden">
+      <header className="bg-brand-dark text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-40 overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-purple/20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
         
         <div className="flex justify-between items-center mb-6 relative z-10">

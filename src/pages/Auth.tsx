@@ -59,7 +59,7 @@ export default function Auth() {
           return;
         }
         
-        navigate('/dashboard');
+        navigate('/onboarding/profile');
       }
     } catch (err: any) {
       let errorMessage = err.message || 'Authentication failed';
